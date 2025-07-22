@@ -1,0 +1,6 @@
+@AuthInAsp_HostAddress = http://localhost:5277
+
+GET {{AuthInAsp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
