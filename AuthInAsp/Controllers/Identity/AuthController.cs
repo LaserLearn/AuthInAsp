@@ -2,6 +2,7 @@
 using AuthInAsp.IdentityService.Abstract;
 using AuthInAsp.model;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,7 +12,10 @@ using System.Text;
 
 namespace AuthenticationInCleanArchitecture.Api.Controllers.Identity
 {
-    public class AuthController
+    [ApiController]
+    [Route("[controller]")]
+    
+    public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
         private readonly Iuser _user;
@@ -31,6 +35,20 @@ namespace AuthenticationInCleanArchitecture.Api.Controllers.Identity
             return responce;
         }
 
+        [Authorize]
+        [HttpGet("getUser")]
+        public async Task<ActionResult<string>> GetUser()
+        {
+            string userid = _userService.GetUserId();
+            int user_id = int.Parse(userid);
+
+            var target = await _user.Get(user_id);
+
+            if (target is null)
+                return NotFound();
+
+            return Ok(target);
+        }
 
         [HttpPost("register")]
         public async Task<ActionResult<User_En>> Register(Register_Dto request)
@@ -53,24 +71,24 @@ namespace AuthenticationInCleanArchitecture.Api.Controllers.Identity
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<string>> Login(Login_Dto request)
+        public async Task<ActionResult> Login(Login_Dto request)
         {
             var User = await _user.GetUserByEmail(request.Email);
 
             if (User == null)
             {
-                return "User not found.";
+                return NotFound("User not found.");
             }
 
             if (!VerifyPasswordHash(request.Password, User.PasswordHash, User.PasswordSalt))
             {
-                return "Wrong password.";
+                return BadRequest("Wrong password.");
             }
 
             string token = CreateToken(User);
 
 
-            return token;
+            return Ok(token);
         }
 
         private string CreateToken(User_En user)
@@ -78,7 +96,8 @@ namespace AuthenticationInCleanArchitecture.Api.Controllers.Identity
             var claims = new List<Claim>
     {
         new Claim(ClaimTypes.Name, user.Username) ,
-        new Claim(ClaimTypes.Email , user.Email)
+        new Claim(ClaimTypes.Email , user.Email),
+        new Claim(ClaimTypes.SerialNumber , user.Id.ToString())
     };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AppSettings:Token"]));
@@ -97,7 +116,6 @@ namespace AuthenticationInCleanArchitecture.Api.Controllers.Identity
 
             return jwt;
         }
-
 
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
         {

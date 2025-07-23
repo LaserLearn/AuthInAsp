@@ -31,5 +31,15 @@ namespace AuthInAsp.IdentityService.Implement
             }
             return result;
         }
+
+        public string GetUserId()
+        {
+            var result = string.Empty;
+            if (_httpContextAccessor.HttpContext != null)
+            {
+                result = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.SerialNumber);
+            }
+            return result;
+        }
     }
 }

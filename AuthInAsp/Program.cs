@@ -69,7 +69,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowedOrigins", policy =>
     {
         policy
-            .WithOrigins("http://localhost:4200", "https://manoostad.ir")
+            .WithOrigins("http://localhost:4200", "https://LaserLearn.ir")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
@@ -78,7 +78,7 @@ builder.Services.AddCors(options =>
 
 #endregion
 
-
+#region DB
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Connection string"
@@ -92,9 +92,12 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 
 builder.Services.AddScoped<Iuser, User_Rep>();
 
+#endregion
 
 
+// DI
 builder.Services.AddScoped<IUserService, UserService>();
+
 
 var app = builder.Build();
 
